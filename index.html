@@ -130,6 +130,51 @@
     </div>
   </section>
 
+  <section class="order" id="order">
+    <div class="order-copy">
+      <h2>Записаться<br>или спросить</h2>
+      <p>Оставьте номер — перезвоним и скажем точную цену
+        по вашим колёсам и свободное время. Без ожидания на линии.</p>
+      <p class="order-alt">Или сразу звоните:
+        <a href="tel:+79882444225">+7 988 244-42-25</a></p>
+      <ul class="order-facts">
+        <li><b>Российская, 788</b> — въезд с улицы</li>
+        <li><b>Ежедневно 9:00–20:00</b>, без выходных</li>
+        <li><b>Оплата картой</b> и наличными, Wi-Fi, гарантия</li>
+      </ul>
+    </div>
+
+    <form class="order-form" id="order-form" novalidate>
+      <div class="field">
+        <label for="f-name">Как вас зовут</label>
+        <input id="f-name" name="name" type="text" autocomplete="name" placeholder="Иван">
+      </div>
+      <div class="field">
+        <label for="f-phone">Телефон <span>*</span></label>
+        <input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+7 918 000-00-00" required>
+      </div>
+      <div class="field">
+        <label for="f-service">Что нужно</label>
+        <select id="f-service" name="service">
+          <option>Шиномонтаж, комплект 4 колеса</option>
+          <option>Шиномонтаж, одно колесо</option>
+          <option>Правка диска</option>
+          <option>Сход-развал</option>
+          <option>Ремонт прокола или пореза</option>
+          <option>Хранение шин</option>
+          <option>Другое — расскажу по телефону</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-size">Размер колёс</label>
+        <input id="f-size" name="size" type="text" placeholder="R16, 205/55" inputmode="text">
+      </div>
+      <button class="btn btn-red order-send" type="submit">Отправить в WhatsApp</button>
+      <p class="order-fine">Нажимая кнопку, вы открываете чат с готовым текстом заявки —
+        останется только отправить. Никаких рассылок.</p>
+    </form>
+  </section>
+
   <section class="where" id="where">
     <div class="where-info">
       <h2>Где мы</h2>
@@ -149,6 +194,44 @@
   <span>Колесо 93 · шиномонтаж, Краснодар, Российская, 788</span>
   <a href="https://yandex.ru/maps/org/koleso_93/1061209079/" target="_blank" rel="noopener">Карточка на Картах</a>
 </footer>
+
+<script>
+(function () {
+  var form = document.getElementById("order-form");
+  if (!form) return;
+  var WA = "79181554435";
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = form.elements.name.value.trim();
+    var phone = form.elements.phone.value.trim();
+    var service = form.elements.service.value;
+    var size = form.elements.size.value.trim();
+
+    if (!phone) {
+      form.elements.phone.classList.add("err");
+      form.elements.phone.focus();
+      return;
+    }
+    form.elements.phone.classList.remove("err");
+
+    var lines = [
+      "Заявка с сайта Колесо 93",
+      name ? "Имя: " + name : "",
+      "Телефон: " + phone,
+      "Нужно: " + service,
+      size ? "Размер колёс: " + size : ""
+    ].filter(Boolean);
+
+    window.open("https://wa.me/" + WA + "?text=" + encodeURIComponent(lines.join("\n")),
+                "_blank", "noopener");
+  });
+
+  form.elements.phone.addEventListener("input", function () {
+    form.elements.phone.classList.remove("err");
+  });
+})();
+</script>
 
 </body>
 </html>
