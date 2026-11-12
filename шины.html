@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Шины в наличии — Колесо 93, Краснодар</title>
+<meta name="description" content="Каталог шин шиномонтажа «Колесо 93»: Bridgestone, Amtel, BFGoodrich, Bars. Летние и зимние, R14–R21. Соберите заказ и пришлите его в WhatsApp.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23ce2f22'/%3E%3Ctext x='32' y='44' font-family='Arial Narrow,Arial' font-size='30' font-weight='bold' fill='white' text-anchor='middle'%3E93%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="catalog.css">
+</head>
+<body>
+
+<header class="top">
+  <a class="logo" href="index.html">
+    <span class="logo-mark">К93</span>
+    <span class="logo-text">Колесо 93<small>шиномонтаж · Краснодар</small></span>
+  </a>
+  <div class="top-right">
+    <a class="top-link" href="index.html">Цены и услуги</a>
+    <a class="btn btn-red" href="tel:+79882444225">+7 988 244-42-25</a>
+  </div>
+</header>
+
+<main>
+
+  <section class="cat-head">
+    <div>
+      <h1>Шины</h1>
+      <p>Летние и зимние, R14–R21. Цена за одну шину. Наличие и точный размер
+        подтверждаем в WhatsApp — часть позиций возим под заказ.</p>
+    </div>
+    <p class="cat-stat"><b>120</b> моделей в каталоге</p>
+  </section>
+
+  <div class="filters">
+    <label class="f"><span>Диаметр</span><select id="f-d"></select></label>
+    <label class="f"><span>Ширина</span><select id="f-w"></select></label>
+    <label class="f"><span>Профиль</span><select id="f-h"></select></label>
+    <label class="f"><span>Сезон</span><select id="f-season"></select></label>
+    <label class="f"><span>Бренд</span><select id="f-brand"></select></label>
+    <button class="f-reset" id="reset" type="button">Сбросить</button>
+  </div>
+
+  <div class="cat-bar">
+    <span class="cat-found" id="found"></span>
+    <div class="cat-tools">
+      <button class="f-toggle" id="f-toggle" type="button">Фильтры</button>
+      <label class="sort"><span>Сортировка</span>
+        <select id="f-sort">
+          <option value="price-asc">сначала дешёвые</option>
+          <option value="price-desc">сначала дорогие</option>
+          <option value="model">по названию</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="tgrid" id="grid"></div>
+
+  <div class="cat-more">
+    <button class="btn btn-ghost" id="more" type="button" hidden>Показать ещё</button>
+    <p class="cat-hint">Не нашли свой размер — позвоните, привезём под заказ.</p>
+  </div>
+
+</main>
+
+<button class="cart-fab" id="fab" type="button">
+  Корзина <b id="fab-count">0</b> <span id="fab-sum">0 ₽</span>
+</button>
+
+<div class="overlay" id="overlay"></div>
+
+<aside class="cart" id="cart" aria-label="Корзина">
+  <div class="cart-head">
+    <h3>Корзина</h3>
+    <button class="btn-close" id="cart-close" type="button">Закрыть</button>
+  </div>
+  <div class="cart-body" id="cart-body"></div>
+  <div class="cart-foot">
+    <div class="cart-total">Итого: <span id="cart-total">0 ₽</span></div>
+    <div class="cart-actions">
+      <button class="btn-clear" id="cart-clear" type="button">Очистить корзину</button>
+      <a class="btn-wa" id="cart-wa" href="#">Отправить заказ в WhatsApp</a>
+    </div>
+  </div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<footer class="foot">
+  <span>Колесо 93 · шиномонтаж, Краснодар, Российская, 788</span>
+  <a href="index.html">На главную сайта</a>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var WA = "79181554435";
+  var STORE = "k93_basket";
+  var STEP = 24;
+
+  var grid = document.getElementById("grid");
+  var found = document.getElementById("found");
+  var more = document.getElementById("more");
+  var fab = document.getElementById("fab");
+  var cart = document.getElementById("cart");
+  var overlay = document.getElementById("overlay");
+  var cartBody = document.getElementById("cart-body");
+  var cartTotal = document.getElementById("cart-total");
+  var toast = document.getElementById("toast");
+  var filtersBox = document.querySelector(".filters");
+  var fToggle = document.getElementById("f-toggle");
+
+  var items = [];
+  var basket = [];
+  var shown = STEP;
+  var state = { d: "", w: "", h: "", season: "", brand: "", sort: "price-asc" };
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function money(n) {
+    return Number(n).toLocaleString("ru-RU");
+  }
+
+  function plural(n, forms) {
+    var a = Math.abs(n) % 100, b = a % 10;
+    if (a > 10 && a < 20) return forms[2];
+    if (b > 1 && b < 5) return forms[1];
+    if (b === 1) return forms[0];
+    return forms[2];
+  }
+
+  /* "Bridgestone 205/55 R16 Alenza 001 109Y" -> бренд, размер, диаметр, модель */
+  function parse(item) {
+    var name = String(item.name || "");
+    var rest = name.slice(String(item.brand || "").length).trim();
+    var parts = rest.split(/\s+/);
+    var size = parts[0] || "";
+    var dia = parts[1] || "";
+    var model = parts.slice(2).join(" ");
+    var wh = size.split("/");
+    var spikes = !!item.spikes;
+    var w = item.w || wh[0] || "";
+    var h = item.h || wh[1] || "";
+
+    model = model.replace(/\s*(шипы|шип\.?)\s*$/i, "").trim();
+
+    return {
+      id: name,
+      brand: item.brand || "",
+      w: w,
+      h: h,
+      d: item.d || dia,
+      season: spikes ? "Зима" : (item.season || ""),
+      spikes: spikes,
+      price: Number(item.price) || 0,
+      model: model || name,
+      size: (w && h) ? w + "/" + h : (size || "—")
+    };
+  }
+
+  function fillSelect(el, values, label) {
+    var html = '<option value="">' + label + "</option>";
+    values.forEach(function (v) {
+      html += '<option value="' + esc(v) + '">' + esc(v) + "</option>";
+    });
+    el.innerHTML = html;
+  }
+
+  function uniq(values, numeric) {
+    var out = [];
+    values.forEach(function (v) {
+      if (v && out.indexOf(v) === -1) out.push(v);
+    });
+    out.sort(numeric ? function (a, b) {
+      return parseFloat(a) - parseFloat(b);
+    } : function (a, b) {
+      return a.localeCompare(b, "ru");
+    });
+    return out;
+  }
+
+  function buildFilters() {
+    fillSelect(document.getElementById("f-d"), uniq(items.map(function (p) { return p.d; }), true), "все");
+    fillSelect(document.getElementById("f-w"), uniq(items.map(function (p) { return p.w; }), true), "все");
+    fillSelect(document.getElementById("f-h"), uniq(items.map(function (p) { return p.h; }), true), "все");
+    fillSelect(document.getElementById("f-season"), uniq(items.map(function (p) { return p.season; })), "все");
+    fillSelect(document.getElementById("f-brand"), uniq(items.map(function (p) { return p.brand; })), "все");
+
+    ["d", "w", "h", "season", "brand"].forEach(function (key) {
+      document.getElementById("f-" + key).addEventListener("change", function (e) {
+        state[key] = e.target.value;
+        shown = STEP;
+        updateToggle();
+        render();
+      });
+    });
+
+    document.getElementById("f-sort").addEventListener("change", function (e) {
+      state.sort = e.target.value;
+      render();
+    });
+
+    document.getElementById("reset").addEventListener("click", function () {
+      state.d = state.w = state.h = state.season = state.brand = "";
+      state.sort = "price-asc";
+      document.getElementById("f-d").value = "";
+      document.getElementById("f-w").value = "";
+      document.getElementById("f-h").value = "";
+      document.getElementById("f-season").value = "";
+      document.getElementById("f-brand").value = "";
+      document.getElementById("f-sort").value = "price-asc";
+      shown = STEP;
+      updateToggle();
+      render();
+    });
+  }
+
+  function pick() {
+    return items.filter(function (p) {
+      if (state.d && p.d !== state.d) return false;
+      if (state.w && p.w !== state.w) return false;
+      if (state.h && p.h !== state.h) return false;
+      if (state.season && p.season !== state.season) return false;
+      if (state.brand && p.brand !== state.brand) return false;
+      return true;
+    }).sort(function (a, b) {
+      if (state.sort === "price-desc") return b.price - a.price;
+      if (state.sort === "model") return (a.brand + " " + a.model).localeCompare(b.brand + " " + b.model, "ru");
+      return a.price - b.price;
+    });
+  }
+
+  function cardHTML(p) {
+    var inCart = basket.some(function (b) { return b.id === p.id; });
+    var tags = "";
+    if (p.spikes) tags += '<span class="badge">шипы</span>';
+    if (p.season) {
+      tags += '<span class="badge ' + (p.season === "Зима" ? "w" : "s") + '">' +
+        esc(p.season.toLowerCase()) + "</span>";
+    }
+
+    return '<article class="tcard">' +
+      '<div class="tcard-top">' +
+        '<span class="tcard-brand">' + esc(p.brand) + "</span>" +
+        '<span class="tcard-tags">' + tags + "</span>" +
+      "</div>" +
+      '<div class="tcard-size">' + esc(p.size) + "<b>" + esc(p.d) + "</b></div>" +
+      '<div class="tcard-model">' + esc(p.model) + "</div>" +
+      '<div class="tcard-foot">' +
+        '<span class="tcard-price">' + money(p.price) + "<small> ₽/шт</small></span>" +
+        '<button class="tcard-add' + (inCart ? " in" : "") + '" type="button" data-id="' +
+          esc(p.id) + '">' + (inCart ? "в корзине" : "в корзину") + "</button>" +
+      "</div>" +
+    "</article>";
+  }
+
+  function render() {
+    var list = pick();
+    var visible = list.slice(0, shown);
+
+    found.innerHTML = list.length
+      ? "Найдено <b>" + list.length + "</b> " + plural(list.length, ["шина", "шины", "шин"])
+      : "Ничего не найдено";
+
+    if (!visible.length) {
+      grid.innerHTML = '<p class="cat-empty">По этим фильтрам ничего нет. ' +
+        "Сбросьте фильтры или позвоните — подберём под заказ.</p>";
+      more.hidden = true;
+      return;
+    }
+
+    grid.innerHTML = visible.map(cardHTML).join("");
+    more.hidden = list.length <= shown;
+    more.textContent = "Показать ещё " + Math.min(STEP, list.length - shown);
+  }
+
+  /* ---------- корзина ---------- */
+
+  function saveBasket() {
+    try {
+      localStorage.setItem(STORE, JSON.stringify(basket));
+    } catch (e) {}
+  }
+
+  function loadBasket() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(STORE) || "[]");
+      basket = Array.isArray(raw) ? raw.filter(function (b) {
+        return b && items.some(function (p) { return p.id === b.id; }) && b.qty > 0;
+      }) : [];
+    } catch (e) {
+      basket = [];
+    }
+  }
+
+  function byId(id) {
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].id === id) return items[i];
+    }
+    return null;
+  }
+
+  function total() {
+    return basket.reduce(function (sum, b) {
+      var p = byId(b.id);
+      return sum + (p ? p.price * b.qty : 0);
+    }, 0);
+  }
+
+  function count() {
+    return basket.reduce(function (n, b) { return n + b.qty; }, 0);
+  }
+
+  function addToCart(id) {
+    var p = byId(id);
+    if (!p) return;
+    var row = basket.filter(function (b) { return b.id === id; })[0];
+    if (row) row.qty += 1;
+    else basket.push({ id: id, qty: 1 });
+    saveBasket();
+    render();
+    renderCart();
+    showToast(p.brand + " " + p.size + " — в корзине");
+  }
+
+  function setQty(id, delta) {
+    basket.forEach(function (b) {
+      if (b.id !== id) return;
+      b.qty += delta;
+    });
+    basket = basket.filter(function (b) { return b.qty > 0; });
+    saveBasket();
+    render();
+    renderCart();
+  }
+
+  function dropItem(id) {
+    basket = basket.filter(function (b) { return b.id !== id; });
+    saveBasket();
+    render();
+    renderCart();
+  }
+
+  function renderCart() {
+    var sum = total();
+
+    fab.classList.toggle("show", basket.length > 0);
+    document.getElementById("fab-count").textContent = count();
+    document.getElementById("fab-sum").textContent = money(sum) + " ₽";
+
+    if (!basket.length) {
+      cartBody.innerHTML = '<p class="cart-empty"><b>Корзина пуста</b><br>' +
+        "Добавьте шины, чтобы собрать заказ</p>";
+      cartTotal.textContent = "0 ₽";
+      return;
+    }
+
+    cartBody.innerHTML = basket.map(function (b) {
+      var p = byId(b.id);
+      return '<div class="cart-item">' +
+        '<div class="cart-item-info">' +
+          '<div class="cart-item-name">' + esc(p.brand) + " " + esc(p.model) + "</div>" +
+          '<span class="cart-item-size">' + esc(p.size) + " " + esc(p.d) + " · " + esc(p.season.toLowerCase()) + "</span>" +
+          '<div class="cart-item-price">' + money(p.price) + " ₽</div>" +
+        "</div>" +
+        '<div class="cart-item-side">' +
+          '<div class="qty">' +
+            '<button type="button" data-id="' + esc(b.id) + '" data-delta="-1" aria-label="Меньше">−</button>' +
+            "<span>" + b.qty + "</span>" +
+            '<button type="button" data-id="' + esc(b.id) + '" data-delta="1" aria-label="Больше">+</button>' +
+          "</div>" +
+          '<button class="cart-item-remove" type="button" data-drop="' + esc(b.id) + '">удалить</button>' +
+        "</div>" +
+      "</div>";
+    }).join("");
+
+    cartTotal.textContent = money(sum) + " ₽";
+  }
+
+  function openCart() {
+    renderCart();
+    cart.classList.add("open");
+    overlay.classList.add("show");
+  }
+
+  function closeCart() {
+    cart.classList.remove("open");
+    overlay.classList.remove("show");
+  }
+
+  function showToast(text) {
+    toast.textContent = text;
+    toast.classList.add("show");
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(function () {
+      toast.classList.remove("show");
+    }, 2200);
+  }
+
+  grid.addEventListener("click", function (e) {
+    var btn = e.target.closest(".tcard-add");
+    if (btn) addToCart(btn.dataset.id);
+  });
+
+  more.addEventListener("click", function () {
+    shown += STEP;
+    render();
+  });
+
+  cartBody.addEventListener("click", function (e) {
+    var qtyBtn = e.target.closest("[data-delta]");
+    if (qtyBtn) {
+      setQty(qtyBtn.dataset.id, Number(qtyBtn.dataset.delta));
+      return;
+    }
+    var del = e.target.closest("[data-drop]");
+    if (del) dropItem(del.dataset.drop);
+  });
+
+  fab.addEventListener("click", openCart);
+  document.getElementById("cart-close").addEventListener("click", closeCart);
+  overlay.addEventListener("click", closeCart);
+
+  fToggle.addEventListener("click", function () {
+    filtersBox.classList.toggle("open");
+  });
+
+  function updateToggle() {
+    var n = [state.d, state.w, state.h, state.season, state.brand].filter(Boolean).length;
+    fToggle.textContent = n ? "Фильтры · " + n : "Фильтры";
+    fToggle.classList.toggle("active", n > 0);
+  }
+
+  document.getElementById("cart-clear").addEventListener("click", function () {
+    basket = [];
+    saveBasket();
+    render();
+    renderCart();
+  });
+
+  document.getElementById("cart-wa").addEventListener("click", function (e) {
+    e.preventDefault();
+    if (!basket.length) return;
+
+    var lines = ["Заказ шин с сайта Колесо 93", ""];
+    basket.forEach(function (b) {
+      var p = byId(b.id);
+      lines.push("• " + p.brand + " " + p.size + " " + p.d + " " + p.model +
+        " — " + b.qty + " шт × " + money(p.price) + " ₽");
+    });
+    lines.push("", "Итого: " + money(total()) + " ₽");
+    lines.push("", "Краснодар, Российская, 788 · +7 988 244-42-25");
+
+    window.open("https://wa.me/" + WA + "?text=" + encodeURIComponent(lines.join("\n")),
+      "_blank", "noopener");
+    closeCart();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeCart();
+  });
+
+  /* ---------- старт ---------- */
+
+  fetch("data/" + encodeURIComponent("товары.json"))
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function (data) {
+      items = data.map(parse);
+      buildFilters();
+      loadBasket();
+      updateToggle();
+      render();
+      renderCart();
+    })
+    .catch(function () {
+      found.textContent = "Каталог не загрузился";
+      grid.innerHTML = '<p class="cat-empty">Не получилось загрузить список шин. ' +
+        "Обновите страницу или позвоните: <a href=\"tel:+79882444225\">+7 988 244-42-25</a></p>";
+    });
+})();
+</script>
+</body>
+</html>
