@@ -259,45 +259,260 @@ h2 { font-size: clamp(28px, 4vw, 46px); }
   max-width: 78ch;
 }
 
-/* ---------- анонс каталога ---------- */
+/* ---------- блок каталога на главной ---------- */
 
-.teaser {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px 32px;
-  padding: clamp(24px, 3.4vw, 40px) clamp(18px, 5vw, 64px);
+.shop {
+  padding: clamp(26px, 3.6vw, 44px) clamp(18px, 5vw, 64px) clamp(30px, 4vw, 48px);
   background: var(--paper);
   border-bottom: 1px solid var(--line);
 }
 
-.teaser-copy { max-width: 56ch; }
+.shop-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 32px;
+}
 
-.teaser-copy h2 {
-  font-size: clamp(24px, 3vw, 34px);
+.shop-head > div { max-width: 62ch; }
+
+.shop-head h2 {
+  font-size: clamp(26px, 3.4vw, 40px);
   margin-bottom: 10px;
 }
 
-.teaser-copy p {
+.shop-lead {
   margin: 0;
   font-size: 15px;
   color: var(--steel);
 }
 
-.teaser-side { display: flex; align-items: center; gap: 22px; }
-
-.teaser-price {
+.shop-price {
   font-family: "Oswald", sans-serif;
-  font-size: clamp(26px, 3vw, 36px);
+  font-size: clamp(24px, 2.8vw, 32px);
   font-weight: 500;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.shop-price small {
+  display: block;
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--steel);
+  margin-top: 4px;
+}
+
+/* подбор по размеру */
+
+.pick {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 132px)) max-content;
+  align-items: end;
+  gap: 10px;
+  margin: 18px 0 0;
+}
+
+.pick-f {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pick-f > span {
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+
+.pick-f select {
+  font-family: "Manrope", sans-serif;
+  font-size: 15px;
+  color: var(--ink);
+  background-color: #fff;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  padding: 9px 28px 9px 11px;
+  width: 100%;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+    linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.pick-f select:focus {
+  outline: 2px solid var(--red);
+  outline-offset: -2px;
+  border-color: var(--red);
+}
+
+.pick-send {
+  cursor: pointer;
+  font-family: "Manrope", sans-serif;
+  padding: 11px 22px;
   white-space: nowrap;
 }
 
-.teaser-price small {
-  font-family: "Manrope", sans-serif;
+.pick-hint {
+  margin: 8px 0 0;
   font-size: 13px;
+  color: var(--steel);
+}
+
+/* карточки */
+
+.mini-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 18px;
+  margin: 24px 0 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.mini-title {
+  font-family: "Oswald", sans-serif;
+  font-size: 19px;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+.mini-title small {
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--steel);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.mini-all {
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 2px solid var(--red);
+}
+
+.mini-all:hover { color: var(--red); }
+
+.mini-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mini-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: #fff;
+  border: 1px solid var(--line);
+  padding: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.mini-card:hover {
+  border-color: var(--red);
+  box-shadow: 0 6px 18px rgba(22, 24, 28, 0.07);
+}
+
+.mini-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mini-brand {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+
+.mini-tags { display: flex; gap: 4px; }
+
+.mbadge {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  background: var(--beton);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.mbadge.w { background: #dde6ec; color: #23485c; }
+.mbadge.s { background: #f3e8d7; color: #7a5322; }
+
+.mini-size {
+  font-family: "Oswald", sans-serif;
+  font-size: 23px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.mini-size b {
+  color: var(--red);
+  font-weight: 600;
+  margin-left: 5px;
+}
+
+.mini-model {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  min-height: 2.7em;
+}
+
+.mini-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+
+.mini-price {
+  font-family: "Oswald", sans-serif;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.mini-price small {
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--steel);
+}
+
+.mini-go {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--red);
+  white-space: nowrap;
+}
+
+.mini-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 18px 0;
+  font-size: 14px;
   color: var(--steel);
 }
 
@@ -563,6 +778,9 @@ h2 { font-size: clamp(28px, 4vw, 46px); }
   .where-contact { text-align: left; }
   .top-addr { display: none; }
   .order { grid-template-columns: 1fr; }
+  .pick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pick-send { grid-column: 1 / -1; }
+  .mini-grid { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 560px) {
@@ -572,8 +790,18 @@ h2 { font-size: clamp(28px, 4vw, 46px); }
   .top { flex-wrap: wrap; }
   .top-right { width: 100%; flex-wrap: wrap; gap: 12px; }
   .top-right .btn { width: 100%; text-align: center; }
-  .teaser-side { flex-wrap: wrap; gap: 14px; }
   .order-form { grid-template-columns: 1fr; }
+
+  .shop { padding-left: 16px; padding-right: 16px; }
+  .shop-price { margin-top: 2px; }
+  .pick { gap: 8px; }
+  .pick-f select { padding: 8px 24px 8px 9px; font-size: 14px; }
+  .mini-top { margin-top: 20px; }
+  .mini-grid { gap: 8px; }
+  .mini-card { padding: 10px; }
+  .mini-size { font-size: 20px; }
+  .mini-model { font-size: 12px; min-height: 0; }
+  .mini-price { font-size: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -79,6 +79,34 @@
     </div>
   </section>
 
+  <section class="shop" id="shop">
+    <div class="shop-head">
+      <div>
+        <p class="kicker">Каталог шин</p>
+        <h2>Шины можно купить здесь</h2>
+        <p class="shop-lead">Bridgestone, Amtel, BFGoodrich, Bars — летние и зимние,
+          R14–R21. Цена сразу за одну шину, без «уточним на месте»:
+          подтверждаем наличие и ставим у себя на Российской, 788.</p>
+      </div>
+      <span class="shop-price" id="shop-price">от 3 940 ₽<small> за шину</small></span>
+    </div>
+
+    <form class="pick" id="pick-form">
+      <label class="pick-f"><span>Ширина</span><select id="p-w"></select></label>
+      <label class="pick-f"><span>Профиль</span><select id="p-h"></select></label>
+      <label class="pick-f"><span>Диаметр</span><select id="p-d"></select></label>
+      <button class="btn btn-red pick-send" type="submit">Подобрать шины</button>
+    </form>
+    <p class="pick-hint">Размер написан на боковине шины, например 205/55 R16.
+      Не нашли — позвоните, привезём под заказ.</p>
+
+    <div class="mini-top">
+      <span class="mini-title">Что есть в наличии <small>· цены за одну шину</small></span>
+      <a class="mini-all" href="шины.html">Весь каталог, <span id="all-count">120</span> моделей →</a>
+    </div>
+    <div class="mini-grid" id="mini" aria-live="polite"></div>
+  </section>
+
   <section class="price" id="price">
     <div class="price-head">
       <h2>Комплекс за одно колесо</h2>
@@ -102,19 +130,6 @@
     <p class="price-note">Шины RunFlat и низкий профиль — +50&nbsp;% к тарифу.
       Кроссоверы и внедорожники — по телефону. Цены ориентировочные,
       точную сумму называем до начала работ.</p>
-  </section>
-
-  <section class="teaser">
-    <div class="teaser-copy">
-      <h2>Шины в наличии</h2>
-      <p>120 моделей: Bridgestone, Amtel, BFGoodrich, Bars. Летние и зимние,
-        R14–R21. Выбираете размер — подтверждаем наличие в WhatsApp
-        и ставим у себя.</p>
-    </div>
-    <div class="teaser-side">
-      <span class="teaser-price">от 3 940 ₽<small> за шину</small></span>
-      <a class="btn btn-ink" href="шины.html">Открыть каталог</a>
-    </div>
   </section>
 
   <section class="services" id="services">
@@ -244,6 +259,157 @@
   form.elements.phone.addEventListener("input", function () {
     form.elements.phone.classList.remove("err");
   });
+})();
+</script>
+
+<script>
+/* ---------- блок шин на главной: подбор + 4 карточки из каталога ---------- */
+(function () {
+  "use strict";
+
+  var pickForm = document.getElementById("pick-form");
+  var mini = document.getElementById("mini");
+  if (!pickForm || !mini) return;
+
+  var DIAS = ["R15", "R16", "R17", "R18"];
+  var items = [];
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function money(n) {
+    return Number(n).toLocaleString("ru-RU");
+  }
+
+  /* "Bridgestone 205/55 R16 Alenza 001 109Y" -> размер, диаметр, модель */
+
+  /* у поставщика зимние Blizzak помечены «Лето» — правим по названию модели */
+  function seasonOf(item, model) {
+    if (item.spikes) return "Зима";
+    if (/blizzak|nordmaster|winter|ice\s*guard/i.test(model)) return "Зима";
+    return item.season || "";
+  }
+
+  function parse(item) {
+    var name = String(item.name || "");
+    var rest = name.slice(String(item.brand || "").length).trim();
+    var parts = rest.split(/\s+/);
+    var size = parts[0] || "";
+    var dia = parts[1] || "";
+    var model = parts.slice(2).join(" ").replace(/\s*(шипы|шип\.?)\s*$/i, "").trim();
+    var wh = size.split("/");
+
+    return {
+      brand: item.brand || "",
+      w: item.w || wh[0] || "",
+      h: item.h || wh[1] || "",
+      d: item.d || dia,
+      season: seasonOf(item, model),
+      spikes: !!item.spikes,
+      price: Number(item.price) || 0,
+      model: model || size || name,
+      size: (item.w || wh[0]) && (item.h || wh[1]) ? (item.w || wh[0]) + "/" + (item.h || wh[1]) : (size || "—")
+    };
+  }
+
+  function uniqNumeric(values) {
+    var out = [];
+    values.forEach(function (v) {
+      if (v && out.indexOf(v) === -1) out.push(v);
+    });
+    return out.sort(function (a, b) { return parseFloat(a) - parseFloat(b); });
+  }
+
+  function fill(el, values, label, selected) {
+    var html = '<option value="">' + label + "</option>";
+    values.forEach(function (v) {
+      html += '<option value="' + esc(v) + '"' + (v === selected ? " selected" : "") + ">" + esc(v) + "</option>";
+    });
+    el.innerHTML = html;
+  }
+
+  function buildPicker() {
+    fill(document.getElementById("p-w"), uniqNumeric(items.map(function (p) { return p.w; })), "все", "205");
+    fill(document.getElementById("p-h"), uniqNumeric(items.map(function (p) { return p.h; })), "все", "55");
+    fill(document.getElementById("p-d"), uniqNumeric(items.map(function (p) { return p.d; })), "все", "R16");
+
+    pickForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var q = [];
+      [["w", "p-w"], ["h", "p-h"], ["d", "p-d"]].forEach(function (pair) {
+        var v = document.getElementById(pair[1]).value;
+        if (v) q.push(pair[0] + "=" + encodeURIComponent(v));
+      });
+      location.href = "шины.html" + (q.length ? "?" + q.join("&") : "");
+    });
+  }
+
+  function cardHTML(p) {
+    var tags = "";
+    if (p.spikes) tags += '<span class="mbadge">шипы</span>';
+    if (p.season) tags += '<span class="mbadge ' + (p.season === "Зима" ? "w" : "s") + '">' + esc(p.season.toLowerCase()) + "</span>";
+
+    var href = "шины.html?d=" + encodeURIComponent(p.d) +
+      "&w=" + encodeURIComponent(p.w) +
+      "&h=" + encodeURIComponent(p.h) +
+      "&brand=" + encodeURIComponent(p.brand);
+
+    return '<a class="mini-card" href="' + esc(href) + '">' +
+      '<span class="mini-topline"><span class="mini-brand">' + esc(p.brand) + "</span>" +
+        '<span class="mini-tags">' + tags + "</span></span>" +
+      '<span class="mini-size">' + esc(p.size) + "<b>" + esc(p.d) + "</b></span>" +
+      '<span class="mini-model">' + esc(p.model) + "</span>" +
+      '<span class="mini-foot"><span class="mini-price">' + money(p.price) +
+        "<small> ₽/шт</small></span><span class=\"mini-go\">в каталог</span></span>" +
+    "</a>";
+  }
+
+  function renderMini() {
+    var cards = [];
+
+    DIAS.forEach(function (dia) {
+      var pool = items.filter(function (p) { return p.d === dia; });
+      if (!pool.length) return;
+      pool.sort(function (a, b) { return a.price - b.price; });
+      cards.push(pool[0]);
+    });
+
+    if (cards.length < 4) {
+      items.slice().sort(function (a, b) { return a.price - b.price; }).forEach(function (p) {
+        if (cards.length < 4 && cards.indexOf(p) === -1) cards.push(p);
+      });
+    }
+
+    mini.innerHTML = cards.map(cardHTML).join("");
+  }
+
+  fetch("data/" + encodeURIComponent("товары.json"))
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function (data) {
+      items = data.map(parse);
+      buildPicker();
+      renderMini();
+
+      document.getElementById("all-count").textContent = items.length;
+
+      var min = items.reduce(function (m, p) {
+        return p.price && (!m || p.price < m) ? p.price : m;
+      }, 0);
+      if (min) {
+        document.getElementById("shop-price").innerHTML =
+          "от " + money(min) + " ₽<small> за шину</small>";
+      }
+    })
+    .catch(function () {
+      mini.innerHTML = '<p class="mini-error">Каталог не загрузился. ' +
+        'Позвоните: <a href="tel:+79882444225">+7 988 244-42-25</a></p>';
+    });
 })();
 </script>
 

@@ -34,7 +34,7 @@
       <p>Летние и зимние, R14–R21. Цена за одну шину. Наличие и точный размер
         подтверждаем в WhatsApp — часть позиций возим под заказ.</p>
     </div>
-    <p class="cat-stat"><b>120</b> моделей в каталоге</p>
+    <p class="cat-stat"><b id="cat-count">120</b> моделей в каталоге</p>
   </section>
 
   <div class="filters">
@@ -141,6 +141,14 @@
   }
 
   /* "Bridgestone 205/55 R16 Alenza 001 109Y" -> бренд, размер, диаметр, модель */
+
+  /* у поставщика зимние Blizzak помечены «Лето» — правим по названию модели */
+  function seasonOf(item, model) {
+    if (item.spikes) return "Зима";
+    if (/blizzak|nordmaster|winter|ice\s*guard/i.test(model)) return "Зима";
+    return item.season || "";
+  }
+
   function parse(item) {
     var name = String(item.name || "");
     var rest = name.slice(String(item.brand || "").length).trim();
@@ -161,7 +169,7 @@
       w: w,
       h: h,
       d: item.d || dia,
-      season: spikes ? "Зима" : (item.season || ""),
+      season: seasonOf(item, model),
       spikes: spikes,
       price: Number(item.price) || 0,
       model: model || name,
@@ -223,6 +231,20 @@
       shown = STEP;
       updateToggle();
       render();
+    });
+  }
+
+  /* фильтр по параметрам из ссылки с главной: ?w=205&h=55&d=R16&brand=Bridgestone */
+  function applyQuery() {
+    var q = new URLSearchParams(location.search);
+    ["d", "w", "h", "season", "brand"].forEach(function (key) {
+      var v = q.get(key);
+      if (!v) return;
+      var sel = document.getElementById("f-" + key);
+      var exists = Array.prototype.some.call(sel.options, function (o) { return o.value === v; });
+      if (!exists) return;
+      state[key] = v;
+      sel.value = v;
     });
   }
 
@@ -482,6 +504,8 @@
       items = data.map(parse);
       buildFilters();
       loadBasket();
+      applyQuery();
+      document.getElementById("cat-count").textContent = items.length;
       updateToggle();
       render();
       renderCart();
